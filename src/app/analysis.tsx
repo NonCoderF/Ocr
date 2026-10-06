@@ -4,6 +4,7 @@ import {router} from "expo-router";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {getLatestCapturedImage} from "../lib/captured_image";
 import * as FileSystem from "expo-file-system/legacy";
+import LottieView from "lottie-react-native";
 
 const ANALYZE_IMAGE_URL = "https://jmyqvrvrguhfujgombqe.supabase.co/functions/v1/analyze-image";
 
@@ -49,6 +50,7 @@ const AnalysisScreen = () => {
     useEffect(() => {
         if (!previewUri) return;
         let cancelled = false;
+
         analyzeImage(previewUri).then((response) => {
             if (!cancelled) { setResult(response); setAnalyzing(false); }
         }).catch((requestError: unknown) => {
@@ -61,6 +63,7 @@ const AnalysisScreen = () => {
             }
         });
         return () => { cancelled = true; };
+
     }, [previewUri]);
 
     return (
@@ -79,20 +82,18 @@ const AnalysisScreen = () => {
                 />}</View>
                 <View style={styles.card}>
                     {analyzing && !displayError ? (
-                        <View style={styles.loading}><ActivityIndicator color="#111"/><Text style={styles.status}>Analysing image...</Text></View>
+                        <LottieView
+                            source={require("../../assets/analysis_animation.json")}
+                            style={[StyleSheet.absoluteFill]}
+                            resizeMode="cover"
+                            autoPlay
+                            loop></LottieView>
+
                     ) : displayError ? (
                         <Text style={styles.error}>{displayError}</Text>
                     ) : (
                         <>
                             <Text style={styles.resultTitle}>Analysis result</Text>
-                            {previewUri && (
-                                <Image
-                                    source={{uri: previewUri}}
-                                    style={styles.resultImage}
-                                    resizeMode="contain"
-                                    onError={(event) => console.error("Captured result image failed", event.nativeEvent.error)}
-                                />
-                            )}
                             <Text style={styles.result}>{result}</Text>
                         </>
                     )}
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
     previewFrame: {height: 330, overflow: "hidden", borderRadius: 28, backgroundColor: "#EAEAE7"},
     preview: {width: "100%", height: "100%"},
     resultImage: {width: "100%", height: 180, marginBottom: 16, borderRadius: 16, backgroundColor: "#F0F0ED"},
-    card: {minHeight: 150, marginTop: 20, padding: 20, borderRadius: 24, backgroundColor: "white"},
+    card: {marginTop: 32, padding: 32,},
     loading: {flexDirection: "row", alignItems: "center", gap: 12},
     status: {fontSize: 17, fontWeight: "700"},
     resultTitle: {marginBottom: 12, fontSize: 18, fontWeight: "800"},

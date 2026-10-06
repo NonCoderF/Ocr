@@ -15,6 +15,10 @@ const CameraScreen = () => {
     const [capturedImage, setCapturedImage] = useState<string | null>(null);
     const [isAnalysisSheetOpen, setIsAnalysisSheetOpen] = useState(false);
 
+    const hideBottomSheet = () => {
+        setIsAnalysisSheetOpen(false)
+    };
+
     const handleCapture = async () => {
         if (!cameraRef.current) {
             return;
@@ -93,6 +97,7 @@ const CameraScreen = () => {
                 analyzing={false}
                 visible={isAnalysisSheetOpen}
                 onAnalyze={handleAnalyze}
+                onHide={hideBottomSheet}
             />
 
         </View>
