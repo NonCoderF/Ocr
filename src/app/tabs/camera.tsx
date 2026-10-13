@@ -39,7 +39,9 @@ const CameraScreen = () => {
     const handleAnalyze = () => {
         if (!capturedImage) return;
         setIsAnalysisSheetOpen(false);
-        router.push({pathname: "../../analysis"});
+        router.push({
+            pathname: "/analysis"
+        });
     };
 
     if (!permission) {

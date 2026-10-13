@@ -1,124 +1,166 @@
-import {useEffect, useState} from "react";
-import {ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
-import {router} from "expo-router";
+// ProfileCard.tsx
+
+import {Pressable, StyleSheet, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {getLatestCapturedImage} from "../lib/captured_image";
-import * as FileSystem from "expo-file-system/legacy";
+import {Ionicons} from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
+import {useEffect, useState} from "react";
+import {router} from "expo-router";
+import * as FileSystem from "expo-file-system/legacy";
+import {getLatestCapturedImage} from "@/lib/captured_image";
+import {parseAnalysisResponse} from "@/app/tabs/dto/BaseResponseDto";
 
 const ANALYZE_IMAGE_URL = "https://jmyqvrvrguhfujgombqe.supabase.co/functions/v1/analyze-image";
 
-const analyzeImage = async (imageUri: string) => {
-    const base64 = imageUri.replace(/^data:image\/jpeg;base64,/, "");
-    const temporaryFileUri = `${FileSystem.cacheDirectory}ocr-${Date.now()}.jpg`;
-
-    try {
-        await FileSystem.writeAsStringAsync(temporaryFileUri, base64, {
-            encoding: FileSystem.EncodingType.Base64,
-        });
-
-        const upload = await FileSystem.uploadAsync(
-            ANALYZE_IMAGE_URL,
-            temporaryFileUri,
-            {
-                httpMethod: "POST",
-                uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-                fieldName: "image",
-                mimeType: "image/jpeg",
-                headers: {Accept: "application/json"},
-            },
-        );
-
-        if (upload.status < 200 || upload.status >= 300) {
-            throw new Error(`Analysis API ${upload.status}: ${upload.body}`);
-        }
-
-        return upload.body;
-    } finally {
-        await FileSystem.deleteAsync(temporaryFileUri, {idempotent: true});
-    }
+const COLORS = {
+    background: "#FAF9F6",
+    text: "#151521",
+    muted: "#55545B",
+    purple: "#5957B6",
+    border: "#E9E9E9",
 };
 
-const AnalysisScreen = () => {
-    const capturedImage = getLatestCapturedImage();
-    const previewUri = capturedImage?.previewUri;
-    const [analyzing, setAnalyzing] = useState(Boolean(previewUri));
-    const [result, setResult] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const displayError = error ?? (!previewUri ? "No captured image was provided." : null);
+const analyzeImage = async (imageUri: string) => {
+    const upload = await FileSystem.uploadAsync(
+        ANALYZE_IMAGE_URL,
+        imageUri,
+        {
+            httpMethod: "POST",
+            uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+            fieldName: "image",
+            mimeType: "image/jpeg",
+            headers: {Accept: "application/json"},
+        },
+    );
+
+    if (upload.status < 200 || upload.status >= 300) {
+        throw new Error(`Analysis API ${upload.status}: ${upload.body}`);
+    }
+
+    return upload.body;
+};
+export default function AnalysisScreen() {
+
+    const imageUri
+        = getLatestCapturedImage()?.uri;
+
+
+    const [analyzing, setAnalyzing] = useState<boolean>(true);
 
     useEffect(() => {
-        if (!previewUri) return;
-        let cancelled = false;
+        if (!imageUri) return
 
-        analyzeImage(previewUri).then((response) => {
-            if (!cancelled) { setResult(response); setAnalyzing(false); }
-        }).catch((requestError: unknown) => {
-            if (!cancelled) {
-                console.error("Image analysis request failed", requestError);
-                setError(requestError instanceof Error
-                    ? requestError.message
-                    : "We couldn't analyse this image. Please try again.");
-                setAnalyzing(false);
+        analyzeImage(imageUri).then((response : string) => {
+
+            const responseDto
+                = parseAnalysisResponse(
+                JSON.parse(response.toString())
+            )
+
+
+            console.log("Document is : " + responseDto.analysis.extractedText)
+            Object.entries(responseDto.analysis.details).forEach(([key, value]) => {
+                console.log(`${key}: ${value}`);
+            });
+
+            setAnalyzing(false)
+        }).catch((requestError : any) => {
+            if (requestError instanceof Error){
+                console.log(requestError.message)
             }
-        });
-        return () => { cancelled = true; };
 
-    }, [previewUri]);
+            setAnalyzing(false)
+        })
+    }, [imageUri])
+
+    const handleBack = () => {
+        router.back()
+    }
+
+    // useEffect(() => {
+    //
+    //     setTimeout(() => {
+    //         setAnalyzing(false)
+    //     }, 5000)
+    // })
 
     return (
-        <SafeAreaView style={styles.screen}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Pressable onPress={() => router.back()}><Text style={styles.back}>Back</Text></Pressable>
-                <Text style={styles.title}>ANALYSIS</Text>
-                <View style={styles.spacer}/>
+                <Pressable onPress={handleBack}>
+                    <Ionicons
+                        name={"arrow-back"}
+                        size={24}
+                        color={COLORS.text}
+                    />
+                </Pressable>
+                <Text style={styles.headerTitle}>Analysis</Text>
             </View>
-            <ScrollView contentContainerStyle={styles.content}>
-                <View style={styles.previewFrame}>{previewUri && <Image
-                    source={{uri: previewUri}}
-                    style={styles.preview}
-                    resizeMode="contain"
-                    onError={(event) => console.error("Captured image preview failed", event.nativeEvent.error)}
-                />}</View>
-                <View style={styles.card}>
-                    {analyzing && !displayError ? (
+
+            {
+                analyzing ? (
+                    <View style={styles.lottieLoaderContainer}>
                         <LottieView
-                            source={require("../../assets/analysis_animation.json")}
-                            style={[StyleSheet.absoluteFill]}
+                            source={require("@/assets/analysis_animation.json")}
+                            style={styles.loaderAnimation}
                             resizeMode="cover"
                             autoPlay
-                            loop></LottieView>
+                            loop>
 
-                    ) : displayError ? (
-                        <Text style={styles.error}>{displayError}</Text>
-                    ) : (
-                        <>
-                            <Text style={styles.resultTitle}>Analysis result</Text>
-                            <Text style={styles.result}>{result}</Text>
-                        </>
-                    )}
-                </View>
-            </ScrollView>
+                        </LottieView>
+
+                        <Text style={styles.loadingText}>Please wait while your document is being scanned...</Text>
+
+                        <View style={{height: 125}}/>
+                    </View>
+                ) : (
+                    <View></View>
+                )
+            }
+
         </SafeAreaView>
     );
-};
+}
 
-export default AnalysisScreen;
+const styles = StyleSheet.create(
+    {
+        container: {
+            width: "100%",
+            height: "100%",
+            alignItems: "center"
+        },
+        header: {
+            width: "100%",
+            height: 68,
+            paddingHorizontal: 20,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 22,
+            backgroundColor: "#F0F3F5",
+        },
+        headerTitle: {
+            fontSize: 20,
+            fontWeight: "bold",
+            color: COLORS.text,
+        },
 
-const styles = StyleSheet.create({
-    screen: {flex: 1, backgroundColor: "#F7F7F5"},
-    header: {minHeight: 72, paddingHorizontal: 24, flexDirection: "row", alignItems: "center", justifyContent: "space-between"},
-    back: {fontSize: 16, fontWeight: "600"},
-    title: {fontSize: 20, fontWeight: "800", letterSpacing: 1},
-    spacer: {width: 36},
-    content: {padding: 24, paddingBottom: 40},
-    previewFrame: {height: 330, overflow: "hidden", borderRadius: 28, backgroundColor: "#EAEAE7"},
-    preview: {width: "100%", height: "100%"},
-    resultImage: {width: "100%", height: 180, marginBottom: 16, borderRadius: 16, backgroundColor: "#F0F0ED"},
-    card: {marginTop: 32, padding: 32,},
-    loading: {flexDirection: "row", alignItems: "center", gap: 12},
-    status: {fontSize: 17, fontWeight: "700"},
-    resultTitle: {marginBottom: 12, fontSize: 18, fontWeight: "800"},
-    result: {fontSize: 16, lineHeight: 24, color: "#333"},
-    error: {fontSize: 16, lineHeight: 24, color: "#A33A3A"},
-});
+        lottieLoaderContainer: {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column"
+        },
+        loaderAnimation: {
+            width: 200,
+            height: 200,
+        },
+        loadingText: {
+            width: 250,
+            marginTop: 20,
+            fontSize: 16,
+            color: COLORS.muted,
+            textAlign: "center",
+            fontWeight: "500"
+        }
+    }
+)
