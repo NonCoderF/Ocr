@@ -36,6 +36,13 @@ $appConfig = Get-Content -LiteralPath $appJsonPath -Raw | ConvertFrom-Json
 $packageConfig = Get-Content -LiteralPath $packageJsonPath -Raw | ConvertFrom-Json
 $gradleContent = Get-Content -LiteralPath $gradleBuildPath -Raw
 
+if ($null -eq $appConfig -or $null -eq $appConfig.expo) {
+    throw "Invalid app.json: expected a top-level 'expo' object."
+}
+if ($null -eq $packageConfig) {
+    throw "Invalid package.json: the file is empty or does not contain a JSON object."
+}
+
 $currentVersionName = $appConfig.expo.version
 $versionNameMatch = [regex]::Match($gradleContent, 'versionName\s+["'']([^"'']+)["'']')
 if ($versionNameMatch.Success) {
@@ -88,7 +95,11 @@ if ($null -eq $appConfig.expo.android.PSObject.Properties['versionCode']) {
 }
 $appConfig | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $appJsonPath
 
-$packageConfig.version = $versionName
+if ($packageConfig.PSObject.Properties['version']) {
+    $packageConfig.version = $versionName
+} else {
+    $packageConfig | Add-Member -MemberType NoteProperty -Name version -Value $versionName
+}
 $packageConfig | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $packageJsonPath
 
 if ($gradleContent -notmatch 'versionCode\s+\d+') {
