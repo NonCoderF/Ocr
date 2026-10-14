@@ -1,7 +1,6 @@
 import {Animated, BackHandler, Image, Pressable, StyleSheet, Text, View} from "react-native";
-import {useEffect, useRef} from "react";
+import {useEffect, useState} from "react";
 import LottieView from "lottie-react-native";
-import {Color} from "expo-router";
 
 type Props = {
     imageUri: string | null;
@@ -11,14 +10,11 @@ type Props = {
     onHide: () => void
 };
 
-const CameraAnalysisBottomSheet =
-    ({imageUri, analyzing, visible, onAnalyze, onHide}: Props) => {
+    const CameraAnalysisBottomSheet =
+        ({imageUri, analyzing, visible, onAnalyze, onHide}: Props) => {
+        const [translateY] = useState(() => new Animated.Value(600));
 
-        if (!visible || !imageUri) return null;
-
-        const translateY = useRef(new Animated.Value(600)).current;
-
-        const fade = useRef(new Animated.Value(0)).current
+        const [fade] = useState(() => new Animated.Value(0));
 
         useEffect(() => {
             if (visible) {
@@ -29,7 +25,7 @@ const CameraAnalysisBottomSheet =
                 }).start();
             }
 
-        }, [visible])
+        }, [visible, fade]);
 
         useEffect(() => {
             if (visible) {
@@ -43,7 +39,7 @@ const CameraAnalysisBottomSheet =
                     useNativeDriver: true,
                 }).start();
             }
-        }, [visible])
+        }, [visible, translateY]);
 
         useEffect(() => {
             const backHandler = BackHandler.addEventListener(
@@ -77,8 +73,9 @@ const CameraAnalysisBottomSheet =
             );
 
             return () => backHandler.remove();
-        }, [visible, onHide]);
+        }, [visible, onHide, fade, translateY]);
 
+        if (!visible || !imageUri) return null;
 
 
         return (
@@ -105,7 +102,7 @@ const CameraAnalysisBottomSheet =
                             onPress={onAnalyze} disabled={analyzing}>
 
                             <LottieView
-                                source={require("../../../../assets/analyze_button.json")}
+                                source={require("@/assets/analyze_button.json")}
                                 style={[StyleSheet.absoluteFill]}
                                 resizeMode="cover"
                                 autoPlay

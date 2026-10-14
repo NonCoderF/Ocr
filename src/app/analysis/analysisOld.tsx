@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import {ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View} from "react-native";
 import {router} from "expo-router";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {getLatestCapturedImage} from "./../../../lib/captured_image";
+import {getLatestCapturedImage} from "../../lib/captured_image";
 import * as FileSystem from "expo-file-system/legacy";
 import LottieView from "lottie-react-native";
 
