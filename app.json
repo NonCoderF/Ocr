@@ -33,14 +33,7 @@
                                          "cameraPermission":  "Allow $(PRODUCT_NAME) to access your camera"
                                      }
                                  ],
-                                 [
-                                     "expo-splash-screen",
-                                     {
-                                         "backgroundColor":  "#208AEF",
-                                         "image":  "./assets/images/splash-icon.png",
-                                         "imageWidth":  76
-                                     }
-                                 ]
+                                 "expo-font"
                              ],
                  "experiments":  {
                                      "typedRoutes":  true,

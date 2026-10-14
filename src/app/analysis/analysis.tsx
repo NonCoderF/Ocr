@@ -157,12 +157,14 @@ export default function AnalysisScreen() {
                                     color: "#000000"
                                 }} selectable={true}>{data?.analysis.summary}</Text>
 
-                                <Text style={{
-                                    paddingTop: 20,
-                                    fontWeight: "bold",
-                                    fontSize: 20,
-                                    color: "#000000"
-                                }}>Details</Text>
+                                {data?.analysis.details && Object.entries(data.analysis.details).length > 0 && (
+                                    <Text style={{
+                                        paddingTop: 20,
+                                        fontWeight: "bold",
+                                        fontSize: 20,
+                                        color: "#000000"
+                                    }}>Details</Text>
+                                )}
 
                                 <View style={styles.detailsCard}>
                                     {data?.analysis.details && Object.entries(data.analysis.details).map(([key, value], index, entries) => (
