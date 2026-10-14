@@ -167,7 +167,7 @@ export default function AnalysisScreen() {
                                 )}
 
                                 <View style={styles.detailsCard}>
-                                    {data?.analysis.details && Object.entries(data.analysis.details).map(([key, value], index, entries) => (
+                                    {data?.analysis.details && Object.entries(data.analysis.details).length > 0 && Object.entries(data.analysis.details).map(([key, value], index, entries) => (
                                         <View key={key}>
                                             <View style={styles.detailRow}>
                                                 <Text style={styles.detailKey} selectable={true}>
