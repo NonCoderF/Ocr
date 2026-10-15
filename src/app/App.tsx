@@ -1,4 +1,4 @@
-import CameraScreen from "@/app/camera/camera_screen";
+import CameraScreen from "@/features/camera/presentation/screens/CameraScreen";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {StatusBar} from "react-native";
 
