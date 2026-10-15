@@ -10,7 +10,12 @@ export type AnalysisState = {
     errorMessage: string | null;
 };
 
-export function useAnalysis(imageUri: string | undefined, useCase: Pick<AnalyzeImageUseCase, "execute"> = analyzeImageUseCase): AnalysisState & {retry: () => void; cancel: () => void} {
+export function useAnalysis(
+    imageUri: string | undefined,
+    useCase: Pick<AnalyzeImageUseCase, "execute"> = analyzeImageUseCase): AnalysisState & {
+    retry: () => void;
+    cancel: () => void
+} {
     const [state, setState] = useState<AnalysisState>({analyzing: Boolean(imageUri), data: null, errorMessage: null});
     const requestId = useRef(0);
     const controller = useRef<AbortController | null>(null);
@@ -53,7 +58,5 @@ export function useAnalysis(imageUri: string | undefined, useCase: Pick<AnalyzeI
         };
     }, [analyze, cancel]);
 
-    return { ...state, retry: analyze, cancel };
+    return {...state, retry: analyze, cancel};
 }
-
-

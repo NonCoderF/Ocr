@@ -9,11 +9,13 @@ export default function CaptureBottomSheet({imageUri, analyzing, visible, onAnal
     const [fade] = useState(() => new Animated.Value(0));
 
     useEffect(() => { if (visible) Animated.timing(fade, {toValue: 1, duration: 1000, useNativeDriver: true}).start(); }, [visible, fade]);
+
     useEffect(() => {
         if (!visible) return;
         translateY.setValue(600);
         Animated.spring(translateY, {toValue: 0, damping: 24, stiffness: 120, mass: 1.8, useNativeDriver: true}).start();
     }, [visible, translateY]);
+
     useEffect(() => {
         const handler = BackHandler.addEventListener("hardwareBackPress", () => {
             if (!visible) return false;

@@ -33,10 +33,12 @@ export default function CameraScreen() {
         <View style={styles.cameraContainer}>
             <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back"/>
             <View style={styles.cutout}><Pressable style={styles.captureButton} onPress={handleCapture}>
-                <LottieView source={require("@/assets/camera_icon.json")} style={styles.camera} resizeMode="cover" autoPlay loop/>
+                <LottieView source={require("@/assets/camera_icon.json")} style={styles.camera} resizeMode="cover"
+                            autoPlay loop/>
             </Pressable></View>
         </View>
-        <CaptureBottomSheet imageUri={capturedImage} analyzing={false} visible={isAnalysisSheetOpen} onAnalyze={handleAnalyze} onHide={() => setIsAnalysisSheetOpen(false)}/>
+        <CaptureBottomSheet imageUri={capturedImage} analyzing={false} visible={isAnalysisSheetOpen}
+                            onAnalyze={handleAnalyze} onHide={() => setIsAnalysisSheetOpen(false)}/>
     </View>;
 }
 
@@ -45,8 +47,27 @@ const styles = StyleSheet.create({
     title: {marginTop: 36, fontSize: 36, fontWeight: "800", letterSpacing: -1},
     description: {fontSize: 16, fontStyle: "italic", lineHeight: 23, opacity: 0.6, marginTop: 8, marginBottom: 24},
     cameraContainer: {flex: 1, position: "relative", overflow: "hidden", borderRadius: 28, marginBottom: 20},
-    cutout: {position: "absolute", right: 0, bottom: 0, width: 105, height: 105, borderTopLeftRadius: 36, alignItems: "center", justifyContent: "center", backgroundColor: "white"},
-    captureButton: {width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center", backgroundColor: "white", borderWidth: 2, borderColor: "#111"},
+    cutout: {
+        position: "absolute",
+        right: 0,
+        bottom: 0,
+        width: 105,
+        height: 105,
+        borderTopLeftRadius: 36,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "white"
+    },
+    captureButton: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "white",
+        borderWidth: 2,
+        borderColor: "#111"
+    },
     camera: {width: 50, height: 50},
 });
 
