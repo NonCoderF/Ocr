@@ -54,6 +54,25 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Email APK link to testers
+        uses: dawidd6/action-send-mail@v18
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: OCR release APK is ready
+          to: ${{ secrets.APK_TESTERS }}
+          from: OCR build bot <${{ secrets.GMAIL_USERNAME }}>
+          body: |
+            The latest OCR release APK is ready.
+
+            Download it from the GitHub Actions artifact page:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts
+
+            This artifact is retained for 14 days and requires GitHub access.
+
       - name: Show downloadable APK link
         shell: bash
         run: |
