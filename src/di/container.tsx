@@ -8,6 +8,3 @@ const analysisRepository = new AnalysisRepositoryImpl(analysisApi);
 export const analyzeImageUseCase = new AnalyzeImageUseCase(analysisRepository);
 
 
-
-
-
