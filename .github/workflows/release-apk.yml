@@ -46,44 +46,37 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Upload release APK
-        uses: actions/upload-artifact@v4
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          name: ocr-release-apk
-          path: android/app/build/outputs/apk/release/*.apk
-          if-no-files-found: error
-          retention-days: 14
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
-      - name: Email APK link to testers
-        uses: dawidd6/action-send-mail@v18
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.GMAIL_USERNAME }}
-          password: ${{ secrets.GMAIL_APP_PASSWORD }}
-          subject: OCR release APK is ready
-          to: ${{ secrets.APK_TESTERS }}
-          from: OCR build bot <${{ secrets.GMAIL_USERNAME }}>
-          body: |
-            The latest OCR release APK is ready.
-
-            Download it from the GitHub Actions artifact page:
-            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts
-
-            This artifact is retained for 14 days and requires GitHub access.
+      - name: Upload APK to Firebase App Distribution
+        shell: bash
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_TESTERS: ${{ secrets.FIREBASE_TESTERS }}
+        run: |
+          set -o pipefail
+          apk_path=$(find "$GITHUB_WORKSPACE/android/app/build/outputs/apk/release" -name '*.apk' -type f -print -quit)
+          npx --yes firebase-tools@latest appdistribution:distribute "$apk_path" \
+            --app "$FIREBASE_APP_ID" \
+            --testers "$FIREBASE_TESTERS" \
+            --release-notes "GitHub Actions build $GITHUB_SHA" | tee firebase-upload.log
 
       - name: Show downloadable APK link
         shell: bash
         run: |
           apk_path=$(find "$GITHUB_WORKSPACE/android/app/build/outputs/apk/release" -name '*.apk' -type f -print -quit)
-          artifact_url="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts"
           echo "APK path on runner: $apk_path"
-          echo "Downloadable artifact: $artifact_url"
           {
             echo "## Release APK"
             echo
-            echo "[Download the APK artifact]($artifact_url)"
+            echo "Firebase App Distribution uploaded this build and notified the configured testers."
             echo
             echo "APK path in the build workspace: \`$apk_path\`"
+            echo
+            echo "Firebase upload details:"
+            echo
+            sed 's/^/    /' firebase-upload.log
           } >> "$GITHUB_STEP_SUMMARY"
